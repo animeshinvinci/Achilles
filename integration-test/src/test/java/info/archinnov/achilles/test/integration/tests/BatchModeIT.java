@@ -30,17 +30,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+
+import com.datastax.driver.core.*;
+import com.datastax.driver.core.querybuilder.Insert;
+import com.datastax.driver.core.querybuilder.QueryBuilder;
+import info.archinnov.achilles.listener.CASResultListener;
+import info.archinnov.achilles.type.TypedMap;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.powermock.reflect.Whitebox;
-import com.datastax.driver.core.RegularStatement;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.SimpleStatement;
-import com.datastax.driver.core.Statement;
-import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.Update;
 import info.archinnov.achilles.exception.AchillesException;
 import info.archinnov.achilles.internal.context.BatchingFlushContext;
@@ -87,12 +88,12 @@ public class BatchModeIT {
     @Test
     public void should_batch_counters() throws Exception {
         // Start batch
-        Batch batchEm = manager.createBatch();
-        batchEm.startBatch();
+        Batch batch = manager.createBatch();
+        batch.startBatch();
 
         CompleteBean entity = CompleteBeanTestBuilder.builder().randomId().name("name").buid();
 
-        entity = batchEm.insert(entity);
+        entity = batch.insert(entity);
 
         entity.setLabel("label");
 
@@ -100,7 +101,7 @@ public class BatchModeIT {
         entity.setWelcomeTweet(welcomeTweet);
 
         entity.getVersion().incr(10L);
-        batchEm.update(entity);
+        batch.update(entity);
 
         final RegularStatement selectLabel = select("label").from("CompleteBean").where(eq("id", entity.getId()));
         Map<String, Object> result = manager.nativeQuery(selectLabel).first();
@@ -115,14 +116,14 @@ public class BatchModeIT {
         assertThat(result).isNull();
 
         // Flush
-        batchEm.endBatch();
+        batch.endBatch();
 
         Row row = manager.getNativeSession().execute(new SimpleStatement("SELECT label from CompleteBean where id=" + entity.getId())).one();
         assertThat(row.getString("label")).isEqualTo("label");
 
         result = manager.nativeQuery(statement).first();
         assertThat(result.get("counter_value")).isEqualTo(10L);
-        assertThatBatchContextHasBeenReset(batchEm);
+        assertThatBatchContextHasBeenReset(batch);
     }
 
     @Test
@@ -247,16 +248,16 @@ public class BatchModeIT {
         manager.insert(tweet1);
 
         // Start batch
-        Batch batchEm = manager.createBatch();
-        batchEm.startBatch();
+        Batch batch = manager.createBatch();
+        batch.startBatch();
 
-        batchEm.startBatch(TWO);
-        batchEm.insertOrUpdate(tweet2);
+        batch.startBatch(TWO);
+        batch.insertOrUpdate(tweet2);
 
         try {
-            batchEm.endBatch();
+            batch.endBatch();
         } catch (Exception e) {
-            assertThatBatchContextHasBeenReset(batchEm);
+            assertThatBatchContextHasBeenReset(batch);
             exceptionCaught = true;
         }
 
@@ -264,8 +265,8 @@ public class BatchModeIT {
 
         Thread.sleep(1000);
         logAsserter.prepareLogLevel();
-        batchEm.insert(tweet2);
-        batchEm.endBatch();
+        batch.insert(tweet2);
+        batch.endBatch();
         logAsserter.assertConsistencyLevels(ONE);
     }
 
@@ -390,6 +391,30 @@ public class BatchModeIT {
         batch.startBatch();
 
         batch.batchNativeStatement(statement);
+
+        batch.endBatch();
+
+        //When
+        final CompleteBean found = manager.find(CompleteBean.class, id);
+
+        //Then
+        assertThat(found.getName()).isEqualTo(name);
+    }
+
+    @Test
+    public void should_batch_bound_statement() throws Exception {
+        //Given
+        Long id = RandomUtils.nextLong(0,Long.MAX_VALUE);
+        String name = "DuyHai";
+        final Insert insert = insertInto("CompleteBean").value("id", bindMarker("id")).value("name", bindMarker("name")).ifNotExists();
+        final PreparedStatement ps = manager.getNativeSession().prepare(insert);
+        final BoundStatement bs = ps.bind(id, name);
+
+        final Batch batch = manager.createBatch();
+
+        batch.startBatch();
+
+        batch.batchNativeStatement(bs);
 
         batch.endBatch();
 

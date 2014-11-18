@@ -119,7 +119,6 @@ public class NativeQueryTest {
         //Given
         final Options options = OptionsBuilder.ifNotExists();
         query.boundValues = boundValues;
-        query.options = options;
         when(regularStatement.getQueryString()).thenReturn("queryString");
 
         //When

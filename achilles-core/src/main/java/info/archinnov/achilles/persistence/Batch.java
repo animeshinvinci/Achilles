@@ -16,6 +16,7 @@
 package info.archinnov.achilles.persistence;
 
 import com.datastax.driver.core.RegularStatement;
+import com.datastax.driver.core.Statement;
 import com.google.common.base.Optional;
 import info.archinnov.achilles.exception.AchillesException;
 import info.archinnov.achilles.internal.context.BatchingFlushContext;
@@ -409,11 +410,11 @@ public class Batch extends CommonPersistenceManager {
      *      batch.batchNativeStatement(statement,10,"John");
      *  </code></pre>
      *
-     * @param regularStatement native CQL3 statement
+     * @param statement native CQL3 statement
      * @param boundValues optional bound values
      */
-    public void batchNativeStatement(RegularStatement regularStatement, Object ... boundValues) {
-       this.batchNativeStatementWithCASListener(regularStatement, null, boundValues);
+    public void batchNativeStatement(Statement statement, Object ... boundValues) {
+       this.batchNativeStatementWithCASListener(statement, null, boundValues);
     }
 
     /**
@@ -424,13 +425,13 @@ public class Batch extends CommonPersistenceManager {
      *      batch.batchNativeStatementWithCASListener(statement,listener,10,"John");
      *  </code></pre>
      *
-     * @param regularStatement native CQL3 statement
+     * @param statement native CQL3 statement
      * @param casResultListener result listener for CAS operation
      * @param boundValues optional bound values
      */
-    public void batchNativeStatementWithCASListener(RegularStatement regularStatement, CASResultListener casResultListener, Object... boundValues) {
-        validator.validateUpsertOrDelete(regularStatement);
-        final NativeStatementWrapper nativeStatementWrapper = new NativeStatementWrapper(NativeQueryLog.class, regularStatement, boundValues, Optional.fromNullable(casResultListener));
+    public void batchNativeStatementWithCASListener(Statement statement, CASResultListener casResultListener, Object... boundValues) {
+        validator.validateUpsertOrDelete(statement);
+        final NativeStatementWrapper nativeStatementWrapper = new NativeStatementWrapper(NativeQueryLog.class, statement, boundValues, Optional.fromNullable(casResultListener));
         flushContext.pushStatement(nativeStatementWrapper);
     }
 

@@ -18,11 +18,11 @@ package info.archinnov.achilles.query.cql;
 import java.util.Iterator;
 import java.util.List;
 
+import com.datastax.driver.core.Statement;
 import info.archinnov.achilles.internal.persistence.operations.NativeQueryMapper;
 import info.archinnov.achilles.internal.persistence.operations.TypedMapIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.Row;
 import info.archinnov.achilles.internal.context.DaoContext;
 import info.archinnov.achilles.internal.statement.wrapper.NativeQueryLog;
@@ -52,13 +52,9 @@ public class NativeQuery {
 
     protected NativeStatementWrapper nativeStatementWrapper;
 
-    protected Options options;
-
-    public NativeQuery(DaoContext daoContext, RegularStatement regularStatement, Options options, Object... boundValues) {
+    public NativeQuery(DaoContext daoContext, Statement statement, Options options, Object... boundValues) {
         this.daoContext = daoContext;
-        this.nativeStatementWrapper = new NativeStatementWrapper(NativeQueryLog.class, regularStatement, boundValues, options.getCasResultListener());
-        this.options = options;
-        this.boundValues = boundValues;
+        this.nativeStatementWrapper = new NativeStatementWrapper(NativeQueryLog.class, statement, boundValues, options.getCasResultListener());
     }
 
     /**

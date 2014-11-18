@@ -20,9 +20,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.datastax.driver.core.Statement;
+import info.archinnov.achilles.internal.context.ConfigurationContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.Row;
 import com.google.common.base.Optional;
 import info.archinnov.achilles.interceptor.Event;
@@ -50,11 +52,11 @@ public class TypedQuery<T> {
     EntityMapper mapper = EntityMapper.Singleton.INSTANCE.get();
     EntityProxifier proxifier = EntityProxifier.Singleton.INSTANCE.get();
 
-    public TypedQuery(Class<T> entityClass, DaoContext daoContext, RegularStatement regularStatement, EntityMeta meta,
+    public TypedQuery(Class<T> entityClass, DaoContext daoContext, Statement statement, EntityMeta meta,
             PersistenceContextFactory contextFactory, EntityState entityState, Object[] boundValues) {
         this.daoContext = daoContext;
         this.boundValues = boundValues;
-        this.nativeStatementWrapper = new NativeStatementWrapper(entityClass, regularStatement, this.boundValues, Optional.<CASResultListener>absent());
+        this.nativeStatementWrapper = new NativeStatementWrapper(entityClass, statement, this.boundValues, Optional.<CASResultListener>absent());
         this.meta = meta;
         this.contextFactory = contextFactory;
         this.entityState = entityState;

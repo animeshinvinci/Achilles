@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.datastax.driver.core.Statement;
 import info.archinnov.achilles.internal.metadata.holder.EntityMetaConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -170,30 +171,30 @@ abstract class AbstractPersistenceManager {
         return new SliceQueryBuilder<>(sliceQueryExecutor, entityClass, meta);
     }
 
-    protected NativeQuery nativeQuery(RegularStatement regularStatement, Options options, Object... boundValues) {
-        Validator.validateNotNull(regularStatement, "The regularStatement for native query should not be null");
-        return new NativeQuery(daoContext, regularStatement, options, boundValues);
+    protected NativeQuery nativeQuery(Statement statement, Options options, Object... boundValues) {
+        Validator.validateNotNull(statement, "The statement for native query should not be null");
+        return new NativeQuery(daoContext, statement, options, boundValues);
     }
 
-    protected <T> TypedQuery<T> typedQueryInternal(Class<T> entityClass, RegularStatement regularStatement, Object... boundValues) {
+    protected <T> TypedQuery<T> typedQueryInternal(Class<T> entityClass, Statement statement, Object... boundValues) {
         log.debug("Execute typed query for entity class {}", entityClass);
         Validator.validateNotNull(entityClass, "The entityClass for typed query should not be null");
-        Validator.validateNotNull(regularStatement, "The regularStatement for typed query should not be null");
+        Validator.validateNotNull(statement, "The regularStatement for typed query should not be null");
         Validator.validateTrue(entityMetaMap.containsKey(entityClass),"Cannot perform typed query because the entityClass '%s' is not managed by Achilles",entityClass.getCanonicalName());
 
         EntityMeta meta = entityMetaMap.get(entityClass);
-        typedQueryValidator.validateTypedQuery(entityClass, regularStatement, meta);
-        return new TypedQuery<>(entityClass, daoContext, regularStatement, meta, contextFactory, MANAGED, boundValues);
+        typedQueryValidator.validateTypedQuery(entityClass, statement, meta);
+        return new TypedQuery<>(entityClass, daoContext, statement, meta, contextFactory, MANAGED, boundValues);
     }
 
-    protected <T> TypedQuery<T> rawTypedQuery(Class<T> entityClass, RegularStatement regularStatement, Object... boundValues) {
+    protected <T> TypedQuery<T> rawTypedQuery(Class<T> entityClass, Statement statement, Object... boundValues) {
         Validator.validateNotNull(entityClass, "The entityClass for typed query should not be null");
-        Validator.validateNotNull(regularStatement, "The regularStatement for typed query should not be null");
+        Validator.validateNotNull(statement, "The regularStatement for typed query should not be null");
         Validator.validateTrue(entityMetaMap.containsKey(entityClass),"Cannot perform typed query because the entityClass '%s' is not managed by Achilles",entityClass.getCanonicalName());
 
         EntityMeta meta = entityMetaMap.get(entityClass);
-        typedQueryValidator.validateRawTypedQuery(entityClass, regularStatement, meta);
-        return new TypedQuery<>(entityClass, daoContext, regularStatement, meta, contextFactory, NOT_MANAGED, boundValues);
+        typedQueryValidator.validateRawTypedQuery(entityClass, statement, meta);
+        return new TypedQuery<>(entityClass, daoContext, statement, meta, contextFactory, NOT_MANAGED, boundValues);
     }
 
     protected <T> TypedQuery<T> indexedQuery(Class<T> entityClass, IndexCondition indexCondition) {

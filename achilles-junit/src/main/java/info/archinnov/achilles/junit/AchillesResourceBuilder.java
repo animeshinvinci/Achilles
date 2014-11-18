@@ -16,12 +16,6 @@
 
 package info.archinnov.achilles.junit;
 
-import info.archinnov.achilles.configuration.ConfigurationParameters;
-import info.archinnov.achilles.interceptor.Interceptor;
-import info.archinnov.achilles.internal.utils.ConfigMap;
-import info.archinnov.achilles.junit.AchillesTestResource.Steps;
-import info.archinnov.achilles.type.InsertStrategy;
-import info.archinnov.achilles.type.NamingStrategy;
 
 import java.util.List;
 import java.util.Map;
@@ -33,6 +27,11 @@ import static info.archinnov.achilles.configuration.ConfigurationParameters.EVEN
 import static info.archinnov.achilles.configuration.ConfigurationParameters.GLOBAL_INSERT_STRATEGY;
 import static info.archinnov.achilles.configuration.ConfigurationParameters.GLOBAL_NAMING_STRATEGY;
 import static info.archinnov.achilles.configuration.ConfigurationParameters.KEYSPACE_NAME;
+import static info.archinnov.achilles.junit.AchillesTestResource.Steps;
+
+import info.archinnov.achilles.configuration.ConfigurationParameters;
+import info.archinnov.achilles.interceptor.Interceptor;
+import info.archinnov.achilles.internal.utils.ConfigMap;
 
 public class AchillesResourceBuilder {
 
